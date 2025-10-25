@@ -1,11 +1,8 @@
 {
   "name": "BaseTap Royale",
-  "description": "A viral onchain clicker for Base.",
-  "icon_url": "/icon.png",
-  "url": "/",
-  "permissions": [
-    "wallet",
-    "profile"
-  ],
+  "description": "Tap-to-earn clicker game built on Base network with gasless mode.",
+  "icon_url": "https://forumevi.github.io/BaseTapRoyale/icon.png",
+  "url": "https://forumevi.github.io/BaseTapRoyale/",
+  "permissions": ["wallet", "profile"],
   "version": "1.0.0"
 }
