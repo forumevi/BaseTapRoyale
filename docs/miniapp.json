@@ -24,5 +24,8 @@
       "sizes": "1200x800",
       "type": "image/png"
     }
-  ]
+  ],
+  "farcaster": {
+    "manifest_url": "https://base-tap-royale.vercel.app/.well-known/farcaster.json"
+  }
 }
