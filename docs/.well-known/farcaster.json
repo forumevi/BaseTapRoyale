@@ -1,11 +1,13 @@
 {
-  "version": 2,
-  "name": "basetap-royale",
-  "builds": [
-    { "src": "docs/**/*", "use": "@vercel/static" }
-  ],
-  "routes": [
-    { "src": "/\\.well-known/farcaster\\.json", "dest": "/docs/.well-known/farcaster.json" },
-    { "src": "/(.*)", "dest": "/docs/$1" }
-  ]
+  "name": "BaseTap Royale",
+  "description": "Tap-to-earn clicker game built on Base network with gasless mode.",
+  "icon_url": "https://base-tap-royale.vercel.app/icon.png",
+  "url": "https://base-tap-royale.vercel.app/",
+  "permissions": ["wallet", "profile"],
+  "version": "1.0.0",
+  "accountAssociation": {
+    "header": "eyJmaWQiOjUyMDE2OCwidHlwZSI6ImF1dGgiLCJrZXkiOiIweDI3N2ZjMTRmNjkwNjA2RWMzMUYwMDYyMDI0NjRFQTU2M2VmRkU2QzIifQ",
+    "payload": "eyJkb21haW4iOiJiYXNlLXRhcC1yb3lhbGUudmVyY2VsLmFwcCJ9",
+    "signature": "24w8HlOZqj/PVMot2QA3FcKFBrO3KqrFoqatCalmdBl3HM3ajYkYYPHaveswXEIa3a1vZy3M2t/0ehW2FVZo7xw="
+  }
 }
