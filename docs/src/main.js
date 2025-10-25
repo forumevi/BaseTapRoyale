@@ -12,27 +12,33 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   let sdk, ethers;
   try {
-    // 🔧 Buradaki destructuring düzeltildi
-    const [_sdk, _ethers] = await Promise.all([import(sdkUrl), import(ethersUrl)]);
-    sdk = _sdk.default || _sdk.sdk || _sdk; // farklı build'leri destekler
-    ethers = _ethers;
+    // ✅ miniapp-sdk default export dönüyor
+    const [sdkModule, ethersModule] = await Promise.all([
+      import(sdkUrl),
+      import(ethersUrl)
+    ]);
+    sdk = sdkModule.default || sdkModule.sdk || sdkModule; // her iki versiyona uyumlu
+    ethers = ethersModule;
   } catch (e) {
     log(`❌ SDK import error: ${e?.message || e}`);
     return;
   }
 
-  // ✅ Ready çağrısı en başta ve garanti çalışıyor
-  try {
-    if (sdk?.actions?.ready) {
-      await sdk.actions.ready();
-      log('✅ Farcaster SDK ready');
-    } else {
-      log('⚠️ SDK.actions.ready() not found');
-    }
-  } catch (e) {
-    log('⚠️ Ready failed (probably non-Farcaster env)');
+  // ✅ Splash screen fix (dokümantasyondaki doğru zamanlama)
+  if (sdk?.actions?.ready) {
+    setTimeout(async () => {
+      try {
+        await sdk.actions.ready();
+        log('✅ Farcaster SDK ready (splash dismissed)');
+      } catch (e) {
+        log(`⚠️ sdk.actions.ready() failed: ${e?.message || e}`);
+      }
+    }, 300);
+  } else {
+    log('⚠️ sdk.actions.ready not found (non-Farcaster env)');
   }
 
+  // ————————————————————————————
   const provider = new ethers.JsonRpcProvider(RPC_URL);
   const ABI = [
     'function tap() external',
