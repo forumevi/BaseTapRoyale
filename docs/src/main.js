@@ -12,18 +12,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   let sdk, ethers;
   try {
-    const [{ sdk: _sdk }, _ethers] = await Promise.all([import(sdkUrl), import(ethersUrl)]);
-    sdk = _sdk;
+    // 🔧 Buradaki destructuring düzeltildi
+    const [_sdk, _ethers] = await Promise.all([import(sdkUrl), import(ethersUrl)]);
+    sdk = _sdk.default || _sdk.sdk || _sdk; // farklı build'leri destekler
     ethers = _ethers;
   } catch (e) {
     log(`❌ SDK import error: ${e?.message || e}`);
     return;
   }
 
-  // ✅ Ready çağrısı (Splash screen fix)
+  // ✅ Ready çağrısı en başta ve garanti çalışıyor
   try {
-    await sdk.actions.ready();
-    log('✅ Farcaster SDK ready');
+    if (sdk?.actions?.ready) {
+      await sdk.actions.ready();
+      log('✅ Farcaster SDK ready');
+    } else {
+      log('⚠️ SDK.actions.ready() not found');
+    }
   } catch (e) {
     log('⚠️ Ready failed (probably non-Farcaster env)');
   }
