@@ -1,18 +1,39 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta property="fc:frame" content="https://base-tap-royale.vercel.app/.well-known/farcaster.json" />
+  <!-- ✅ Farcaster Embed Metadata -->
+  <meta name="fc:frame" content='{
+    "version": "1",
+    "name": "BaseTap Royale",
+    "imageUrl": "https://base-tap-royale.vercel.app/assets/preview.png",
+    "button": {
+      "title": "Play Now",
+      "action": {
+        "type": "launch",
+        "target": "https://base-tap-royale.vercel.app"
+      }
+    },
+    "postUrl": "https://base-tap-royale.vercel.app/api/interactions"
+  }' />
+
+  <!-- ✅ Farcaster Manifest Link -->
+  <meta property="fc:frame" content="https://base-tap-royale.vercel.app/.well-known/farcaster.json" />
+
+  <!-- ✅ Miniapp Manifest -->
+  <meta name="miniapp:manifest" content="/miniapp.json" />
+
+  <!-- Standard HTML Head -->
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>BaseTap Royale</title>
   <link rel="icon" href="icon.png" />
-  <meta name="miniapp:manifest" content="/miniapp.json" />
+
   <style>
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif;
-           margin:0; padding:0; display:flex; align-items:center; justify-content:center; min-height:100vh; }
-    .card { width: 360px; border: 1px solid #e5e7eb; border-radius: 16px; padding: 20px; box-shadow: 0 6px 24px rgba(0,0,0,0.08); }
-    .title { font-weight: 800; font-size: 22px; margin-bottom: 8px; }
-    .subtitle { color:#6b7280; margin-bottom:16px; }
+           margin:0; padding:0; display:flex; align-items:center; justify-content:center; min-height:100vh; background:#f9fafb; }
+    .card { width: 360px; border: 1px solid #e5e7eb; border-radius: 16px; padding: 20px; box-shadow: 0 6px 24px rgba(0,0,0,0.08); background:white; }
+    .title { font-weight: 800; font-size: 22px; margin-bottom: 8px; text-align:center; }
+    .subtitle { color:#6b7280; margin-bottom:16px; text-align:center; }
     .button { width: 100%; padding: 16px; border-radius: 14px; border: 0; cursor:pointer; font-weight:700; font-size:18px; }
     .primary { background: #1a56db; color:white; }
     .muted { background: #f3f4f6; color:#111827; }
@@ -30,18 +51,22 @@
   <div class="card">
     <div class="title">BaseTap Royale</div>
     <div class="subtitle">Tap to climb the onchain leaderboard on Base.</div>
+
     <div class="row">
       <div class="stat"><div id="myClicks" class="title">0</div><div class="small">Your Taps</div></div>
       <div class="stat"><div id="lastTx" class="title">—</div><div class="small">Last Tx</div></div>
     </div>
+
     <div style="height:12px"></div>
     <button id="tap" class="button primary">TAP</button>
     <div style="height:8px"></div>
     <button id="tapFree" class="button muted">Gasless TAP (sponsor)</button>
+
     <div class="leader">
       <div class="small" style="margin-bottom:6px;">Leaderboard (last 10k events)</div>
       <div id="leaderboard">Loading…</div>
     </div>
+
     <div class="log mono" id="log"></div>
   </div>
 
