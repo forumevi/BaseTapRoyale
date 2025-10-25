@@ -6,6 +6,7 @@
   ],
   "routes": [
     { "src": "/\\.well-known/farcaster\\.json", "dest": "/docs/.well-known/farcaster.json" },
+    { "src": "/miniapp\\.json", "dest": "/docs/miniapp.json" },
     { "src": "/(.*)", "dest": "/docs/$1" }
   ]
 }
