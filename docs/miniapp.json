@@ -1,0 +1,11 @@
+{
+  "name": "BaseTap Royale",
+  "description": "A viral onchain clicker for Base.",
+  "icon_url": "/icon.png",
+  "url": "/",
+  "permissions": [
+    "wallet",
+    "profile"
+  ],
+  "version": "1.0.0"
+}
