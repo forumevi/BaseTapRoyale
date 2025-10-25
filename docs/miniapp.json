@@ -1,8 +1,28 @@
 {
   "name": "BaseTap Royale",
-  "description": "Tap-to-earn clicker game built on Base network with gasless mode.",
-  "icon_url": "https://base-tap-royale.vercel.app/icon.png",
-  "url": "https://base-tap-royale.vercel.app/",
-  "version": "1.0.0",
-  "permissions": ["wallet", "profile"]
+  "short_name": "BaseTap",
+  "description": "Tap-to-earn clicker game built on Base network. Earn rewards and climb the leaderboard!",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0052FF",
+  "theme_color": "#0052FF",
+  "icons": [
+    {
+      "src": "https://base-tap-royale.vercel.app/assets/preview.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "https://base-tap-royale.vercel.app/assets/screenshot1.png",
+      "sizes": "1200x800",
+      "type": "image/png"
+    },
+    {
+      "src": "https://base-tap-royale.vercel.app/assets/screenshot2.png",
+      "sizes": "1200x800",
+      "type": "image/png"
+    }
+  ]
 }
