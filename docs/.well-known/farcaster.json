@@ -1,13 +1,31 @@
 {
-  "name": "BaseTap Royale",
-  "description": "Tap-to-earn clicker game built on Base network with gasless mode.",
-  "icon_url": "https://base-tap-royale.vercel.app/icon.png",
-  "url": "https://base-tap-royale.vercel.app/",
-  "permissions": ["wallet", "profile"],
-  "version": "1.0.0",
   "accountAssociation": {
     "header": "eyJmaWQiOjUyMDE2OCwidHlwZSI6ImF1dGgiLCJrZXkiOiIweDI3N2ZjMTRmNjkwNjA2RWMzMUYwMDYyMDI0NjRFQTU2M2VmRkU2QzIifQ",
     "payload": "eyJkb21haW4iOiJiYXNlLXRhcC1yb3lhbGUudmVyY2VsLmFwcCJ9",
-    "signature": "24w8HlOZqj/PVMot2QA3FcKFBrO3KqrFoqatCalmdBl3HM3ajYkYYPHaveswXEIa3a1vZy3M2t/0ehW2FVZo7xw="
+    "signature": "qar/U4kHT1HDCPM6rx8FXgyu5bi9oyvgyfA/1DvKH8pF3LJTbsk0pqQMHTqsXY2OAcxcFVuakyzAoLvl9FKTRBw="
+  },
+  "frame": {
+    "version": "1",
+    "name": "BaseTap Royale",
+    "iconUrl": "https://base-tap-royale.vercel.app/icon.png",
+    "homeUrl": "https://base-tap-royale.vercel.app",
+    "description": "Tap-to-earn clicker game built on Base network. Earn rewards and climb the leaderboard!",
+    "primaryCategory": "games",
+    "tags": ["gaming", "miniapp", "clicker"],
+    "subtitle": "Tap fast, earn faster!",
+    "screenshotUrls": [
+      "https://base-tap-royale.vercel.app/assets/screenshot1.png"
+    ],
+    "imageUrl": "https://base-tap-royale.vercel.app/assets/preview.png",
+    "heroImageUrl": "https://base-tap-royale.vercel.app/assets/hero.png",
+    "splashImageUrl": "https://base-tap-royale.vercel.app/assets/splash.png",
+    "splashBackgroundColor": "#0052FF",
+    "tagline": "Tap your way to Base rewards!",
+    "buttonTitle": "Play Now",
+    "ogDescription": "Join thousands of players tapping to earn Base rewards. Gasless, instant, fun!",
+    "ogTitle": "Tap Earn Conquer on Base",
+    "ogImageUrl": "https://base-tap-royale.vercel.app/assets/og-image.png",
+    "castShareUrl": "https://warpcast.com/~/compose?text=Play+BaseTap+Royale+on+Base+Network+⚡%0Ahttps%3A%2F%2Fbase-tap-royale.vercel.app",
+    "webhookUrl": "https://api.basetaproyale.xyz/webhook"
   }
 }
