@@ -3,23 +3,13 @@
   "name": "base-tap-royale",
   "public": true,
   "builds": [
-    {
-      "src": "docs/**/*",
-      "use": "@vercel/static"
-    }
+    { "src": "docs/**/*", "use": "@vercel/static" },
+    { "src": "api/**/*.js", "use": "@vercel/node" }
   ],
   "routes": [
-    {
-      "src": "/\\.well-known/farcaster\\.json",
-      "dest": "/docs/.well-known/farcaster.json"
-    },
-    {
-      "src": "/miniapp\\.json",
-      "dest": "/docs/miniapp.json"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/docs/$1"
-    }
+    { "src": "/api/(.*)", "dest": "/api/$1.js" },
+    { "src": "/\\.well-known/farcaster\\.json", "dest": "/docs/.well-known/farcaster.json" },
+    { "src": "/miniapp\\.json", "dest": "/docs/miniapp.json" },
+    { "src": "/(.*)", "dest": "/docs/$1" }
   ]
 }
