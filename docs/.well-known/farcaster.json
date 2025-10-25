@@ -6,3 +6,10 @@
   "permissions": ["wallet", "profile"],
   "version": "1.0.0"
 }
+{
+  "accountAssociation": {
+    "header": "eyJmaWQiOjUyMDE2OCwidHlwZSI6ImF1dGgiLCJrZXkiOiIweDI3N2ZjMTRmNjkwNjA2RWMzMUYwMDYyMDI0NjRFQTU2M2VmRkU2QzIifQ",
+    "payload": "eyJkb21haW4iOiJiYXNlLXRhcC1yb3lhbGUudmVyY2VsLmFwcCJ9",
+    "signature": "24w8HlOZqj/PVMot2QA3FcKFBrO3KqrFoqatCalmdBl3HM3ajYkYYPHaveswXEIa3a1vZy3M2t/0ehW2FVZo7xw="
+  }
+}
