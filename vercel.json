@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "name": "basetap-royale",
+  "builds": [
+    {
+      "src": "docs/**/*",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    { "src": "/(.*)", "dest": "/docs/$1" }
+  ]
+}
