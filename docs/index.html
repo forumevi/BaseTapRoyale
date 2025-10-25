@@ -1,23 +1,35 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <!-- ✅ Farcaster Embed Metadata -->
-  <meta name="fc:frame" content='{
+  <!-- ✅ Farcaster Mini App Embed -->
+  <meta name="fc:miniapp" content='{
     "version": "1",
-    "name": "BaseTap Royale",
-    "imageUrl": "https://base-tap-royale.vercel.app/assets/preview.png",
+    "imageUrl": "https://base-tap-royale.vercel.app/assets/og-card-1200x800.png",
     "button": {
       "title": "Play Now",
       "action": {
-        "type": "launch",
-        "target": "https://base-tap-royale.vercel.app"
+        "type": "launch_miniapp",
+        "url": "https://base-tap-royale.vercel.app",
+        "name": "BaseTap Royale",
+        "splashImageUrl": "https://base-tap-royale.vercel.app/assets/splash.png",
+        "splashBackgroundColor": "#0052FF"
       }
-    },
-    "postUrl": "https://base-tap-royale.vercel.app/api/interactions"
+    }
   }' />
 
-  <!-- ✅ Farcaster Manifest Link -->
-  <meta property="fc:frame" content="https://base-tap-royale.vercel.app/.well-known/farcaster.json" />
+  <!-- ✅ Farcaster Frame (backward compatibility) -->
+  <meta name="fc:frame" content='{
+    "version": "1",
+    "imageUrl": "https://base-tap-royale.vercel.app/assets/og-card-1200x800.png",
+    "button": {
+      "title": "Play Now",
+      "action": {
+        "type": "launch_miniapp",
+        "url": "https://base-tap-royale.vercel.app",
+        "name": "BaseTap Royale"
+      }
+    }
+  }' />
 
   <!-- ✅ Miniapp Manifest -->
   <meta name="miniapp:manifest" content="/miniapp.json" />
