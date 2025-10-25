@@ -1,0 +1,8 @@
+{
+  "name": "BaseTap Royale",
+  "description": "Tap-to-earn clicker game built on Base network with gasless mode.",
+  "icon_url": "https://base-tap-royale.vercel.app/icon.png",
+  "url": "https://base-tap-royale.vercel.app/",
+  "permissions": ["wallet", "profile"],
+  "version": "1.0.0"
+}
