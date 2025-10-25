@@ -2,12 +2,10 @@
   "version": 2,
   "name": "basetap-royale",
   "builds": [
-    {
-      "src": "docs/**/*",
-      "use": "@vercel/static"
-    }
+    { "src": "docs/**/*", "use": "@vercel/static" }
   ],
   "routes": [
+    { "src": "/\\.well-known/farcaster\\.json", "dest": "/docs/.well-known/farcaster.json" },
     { "src": "/(.*)", "dest": "/docs/$1" }
   ]
 }
