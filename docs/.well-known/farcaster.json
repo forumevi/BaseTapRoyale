@@ -27,5 +27,7 @@
     "ogImageUrl": "https://base-tap-royale.vercel.app/assets/og-image.png",
     "castShareUrl": "https://warpcast.com/~/compose?text=Play+BaseTap+Royale+on+Base+Network+⚡%0Ahttps%3A%2F%2Fbase-tap-royale.vercel.app",
     "webhookUrl": "https://api.basetaproyale.xyz/webhook"
-  }
+  },
+  "sdkVersion": "latest",
+  "requestedPermissions": ["wallet"]
 }
