@@ -1,23 +1,11 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <!-- ✅ Farcaster Embed Metadata -->
-  <meta name="fc:frame" content='{
-    "version": "1",
-    "name": "BaseTap Royale",
-    "imageUrl": "https://base-tap-royale.vercel.app/assets/preview.png",
-    "button": {
-      "title": "Play Now",
-      "action": {
-        "type": "launch",
-        "target": "https://base-tap-royale.vercel.app"
-      }
-    },
-    "postUrl": "https://base-tap-royale.vercel.app/api/interactions"
-  }' />
+  <!-- ✅ Farcaster Embed Metadata (tek satır, geçerli JSON) -->
+  <meta name="fc:frame" content='{"version":"1","name":"BaseTap Royale","imageUrl":"https://base-tap-royale.vercel.app/assets/preview.png","button":{"title":"Play Now","action":{"type":"launch","target":"https://base-tap-royale.vercel.app"}},"postUrl":"https://base-tap-royale.vercel.app/api/interactions"}'>
 
-  <!-- ✅ Farcaster Manifest Link -->
-  <meta property="fc:frame" content="https://base-tap-royale.vercel.app/.well-known/farcaster.json" />
+  <!-- ✅ Farcaster Manifest Link (doğru rel) -->
+  <link rel="farcaster:manifest" href="https://base-tap-royale.vercel.app/.well-known/farcaster.json">
 
   <!-- ✅ Miniapp Manifest -->
   <meta name="miniapp:manifest" content="/miniapp.json" />
