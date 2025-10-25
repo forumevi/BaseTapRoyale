@@ -1,7 +1,7 @@
 // src/main.js
 import { RPC_URL, CONTRACT_ADDRESS, BACKEND_ORIGIN } from './config.js';
 
-const sdkUrl = 'https://esm.sh/@farcaster/miniapp-sdk@0.0.17';
+const sdkUrl = 'https://esm.sh/@farcaster/miniapp-sdk@latest';
 const ethersUrl = 'https://esm.sh/ethers@6';
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -11,34 +11,38 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   let sdk, ethers;
+
   try {
-    // ✅ miniapp-sdk default export dönüyor
+    // ⚙️ Farcaster SDK ve ethers aynı anda yüklenir
     const [sdkModule, ethersModule] = await Promise.all([
       import(sdkUrl),
-      import(ethersUrl)
+      import(ethersUrl),
     ]);
-    sdk = sdkModule.default || sdkModule.sdk || sdkModule; // her iki versiyona uyumlu
+    // SDK modülündeki export tipine göre fallback
+    sdk = sdkModule.default || sdkModule.sdk || sdkModule;
     ethers = ethersModule;
   } catch (e) {
     log(`❌ SDK import error: ${e?.message || e}`);
     return;
   }
 
-  // ✅ Splash screen fix (dokümantasyondaki doğru zamanlama)
+  // 🧠 DOCS: “Make your app display” — splash’ı kaldırmak için
   if (sdk?.actions?.ready) {
+    // önce DOM render bitsin, sonra Farcaster context’i oluşsun diye kısa delay
     setTimeout(async () => {
       try {
         await sdk.actions.ready();
-        log('✅ Farcaster SDK ready (splash dismissed)');
-      } catch (e) {
-        log(`⚠️ sdk.actions.ready() failed: ${e?.message || e}`);
+        log('✅ sdk.actions.ready() called — splash dismissed');
+      } catch (err) {
+        log(`⚠️ sdk.actions.ready() failed: ${err?.message || err}`);
       }
-    }, 300);
+    }, 100); // 100ms delay doc’ta öneriliyor
   } else {
-    log('⚠️ sdk.actions.ready not found (non-Farcaster env)');
+    log('⚠️ sdk.actions.ready() not available (non-Farcaster env)');
   }
 
-  // ————————————————————————————
+  // ————————————————————————
+  // ethers setup
   const provider = new ethers.JsonRpcProvider(RPC_URL);
   const ABI = [
     'function tap() external',
@@ -46,8 +50,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   ];
   const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
 
-  // ————————————————————————————
-  // Helpers
+  // ————————————————————————
+  // Wallet helpers
   async function getAddress() {
     try {
       const w = await sdk.wallet.getAddress();
@@ -64,8 +68,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const w2 = await sdk.wallet.getAddress();
       if (w2?.address) return w2.address;
     } catch {}
-    alert('Please open this app inside Warpcast → “Open as Mini App” to use wallet.');
-    log('⚠️ Please open inside Warpcast or Farcaster MiniApp client.');
+    alert('Please open inside Warpcast → “Open as Mini App”');
     return null;
   }
 
@@ -97,21 +100,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // ————————————————————————————
-  // Connect Wallet
-  const connectBtn = document.getElementById('connectBtn');
-  if (connectBtn) {
-    connectBtn.addEventListener('click', async () => {
-      const addr = await getAddress();
-      if (addr) {
-        connectBtn.textContent = `Connected`;
-        log(`✅ Wallet: ${addr}`);
-        await refreshMyClicks(addr);
-      }
-    });
-  }
-
-  // ————————————————————————————
+  // ————————————————————————
   // TAP
   const tapBtn = document.getElementById('tap');
   tapBtn?.addEventListener('click', async () => {
@@ -134,7 +123,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // ————————————————————————————
+  // ————————————————————————
   // Gasless TAP
   const tapFreeBtn = document.getElementById('tapFree');
   tapFreeBtn?.addEventListener('click', async () => {
@@ -165,8 +154,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // ————————————————————————————
-  // Init
   await loadLeaderboard();
   log('🧩 UI ready (buttons wired)');
 });
