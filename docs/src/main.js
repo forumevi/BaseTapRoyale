@@ -3,16 +3,20 @@ import { RPC_URL, CONTRACT_ADDRESS, BACKEND_ORIGIN } from './config.js';
 import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk@0.2.0';
 import { ethers } from 'https://esm.sh/ethers@6.8.0';
 
-// try early ready
-try { sdk.actions.ready(); console.log('✅ sdk.actions.ready() early call'); }
-catch(e){ console.warn('⚠ sdk.actions.ready() early failed', e); }
-
 const inFarcaster = typeof window !== 'undefined' && !!window.farcaster;
 console.log('Context:', inFarcaster ? 'Farcaster' : 'Browser');
 
 document.addEventListener('DOMContentLoaded', init);
 
 async function init(){
+  // ✅ Farcaster MiniApp SDK hazır sinyali
+  try {
+    await sdk.actions.ready();
+    console.log('✅ sdk.actions.ready() successfully called (inside init)');
+  } catch(e) {
+    console.warn('⚠ sdk.actions.ready() failed inside init:', e);
+  }
+
   const logEl = document.getElementById('log');
   const log = (m)=>{
     const t = new Date().toLocaleTimeString();
@@ -136,7 +140,7 @@ async function init(){
         const contractWithSigner = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
         const txResp = await contractWithSigner.tap();
         log(`🚀 Fallback tx sent (provider): ${txResp.hash || txResp}`);
-        document.getElementById('lastTx').textContent = (txResp.hash||'tx') .slice(0,10) + '…';
+        document.getElementById('lastTx').textContent = (txResp.hash||'tx').slice(0,10) + '…';
         await txResp.wait?.(1);
         await refreshMyClicks(addr);
       } catch(err){
