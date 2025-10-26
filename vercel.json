@@ -6,20 +6,10 @@
     { "src": "docs/**/*", "use": "@vercel/static" },
     { "src": "api/**/*.js", "use": "@vercel/node" }
   ],
-  "redirects": [
-    {
-      "source": "/.well-known/farcaster.json",
-      "destination": "https://api.farcaster.xyz/miniapps/hosted-manifest/019a20a7-a430-9da5-baad-3601c36125df",
-      "permanent": false,
-      "statusCode": 307
-    }
-  ],
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/$1.js" },
+    { "src": "/\\.well-known/farcaster\\.json", "dest": "/docs/.well-known/farcaster.json" },
     { "src": "/miniapp\\.json", "dest": "/docs/miniapp.json" },
-    { "src": "/$", "dest": "/docs/index.html" },
     { "src": "/(.*)", "dest": "/docs/$1" }
-  ],
-  "cleanUrls": true,
-  "trailingSlash": false
+  ]
 }
