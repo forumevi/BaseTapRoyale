@@ -1,5 +1,5 @@
 // ✅ BaseTap Royale — Final Farcaster MiniApp Version (2025-10)
-// Includes: sdk.ready fix + wallet permission flow + connect button support
+// Includes: sdk.ready fix + wallet permission flow + ABI sync with BaseTap.sol + fallback read
 
 import { RPC_URL, CONTRACT_ADDRESS, BACKEND_ORIGIN } from './config.js';
 import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk@0.2.0';
@@ -30,30 +30,31 @@ async function init() {
   };
 
   const provider = new ethers.JsonRpcProvider(RPC_URL);
+
+  // ✅ ABI now matches deployed BaseTap.sol
   const ABI = [
     'function tap() external',
+    'function tapFor(address user) external',
     'function getClicks(address user) view returns (uint256)',
+    'function clicks(address user) view returns (uint256)',
   ];
   const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
 
   // 🧩 FIXED: Farcaster wallet connect flow (new SDK permission system)
   async function getAddress() {
     try {
-      // 1️⃣ Request permissions if needed
       const perms = await sdk.wallet.getPermissions?.();
       if (!perms || !perms.includes('eth_accounts')) {
         log('Requesting wallet permissions…');
         await sdk.wallet.requestPermissions?.(['eth_accounts']);
       }
 
-      // 2️⃣ Try to fetch address
       const w = await sdk.wallet.getAddress?.();
       if (w?.address) {
         log(`👛 Connected wallet: ${w.address}`);
         return w.address;
       }
 
-      // 3️⃣ Fallback: Ethereum provider path
       if (sdk.wallet.getEthereumProvider) {
         const provider = await sdk.wallet.getEthereumProvider();
         const accounts = await provider.request({
@@ -73,11 +74,16 @@ async function init() {
     }
   }
 
-  // 🧠 Refresh clicks
+  // 🧠 Refresh clicks — with fallback for older ABI
   async function refreshMyClicks(addr) {
     if (!addr) return;
     try {
-      const count = await contract.getClicks(addr);
+      let count;
+      try {
+        count = await contract.getClicks(addr);
+      } catch {
+        count = await contract.clicks(addr);
+      }
       document.getElementById('myClicks').textContent = count.toString();
     } catch (err) {
       log(`❌ Read clicks error: ${err.message}`);
@@ -93,17 +99,13 @@ async function init() {
       return;
     }
     try {
-      const r = await fetch(`${BACKEND_ORIGIN}/api/leaderboard`, {
-        cache: 'no-store',
-      });
+      const r = await fetch(`${BACKEND_ORIGIN}/api/leaderboard`, { cache: 'no-store' });
       if (!r.ok) throw new Error(r.status);
       const data = await r.json();
       const rows = (data.top || [])
         .map(
           (x, i) =>
-            `<tr><td>${i + 1}</td><td>${x.user.slice(0, 6)}…${x.user.slice(
-              -4
-            )}</td><td>${x.total}</td></tr>`
+            `<tr><td>${i + 1}</td><td>${x.user.slice(0, 6)}…${x.user.slice(-4)}</td><td>${x.total}</td></tr>`
         )
         .join('');
       box.innerHTML = `<table><thead><tr><th>#</th><th>User</th><th>Taps</th></tr></thead><tbody>${rows}</tbody></table>`;
@@ -113,7 +115,7 @@ async function init() {
     }
   }
 
-  // 🔌 Connect Wallet button (manual trigger)
+  // 🔌 Connect Wallet button
   const connectBtn = document.getElementById('connectBtn');
   connectBtn?.addEventListener('click', async () => {
     log('🔗 Connect Wallet clicked');
@@ -144,8 +146,7 @@ async function init() {
         chainId: 8453,
       });
 
-      document.getElementById('lastTx').textContent =
-        tx.hash.slice(0, 10) + '…';
+      document.getElementById('lastTx').textContent = tx.hash.slice(0, 10) + '…';
       log(`🚀 Tx sent: ${tx.hash}`);
 
       await provider.waitForTransaction(tx.hash, 1);
@@ -155,7 +156,7 @@ async function init() {
     }
   });
 
-  // 🔘 Gasless TAP
+  // 🔘 Gasless TAP (optional backend)
   const tapFreeBtn = document.getElementById('tapFree');
   tapFreeBtn?.addEventListener('click', async () => {
     log('🖱️ Gasless TAP clicked');
@@ -165,10 +166,7 @@ async function init() {
     }
 
     try {
-      const addr = inFarcaster
-        ? await getAddress()
-        : '0x000000000000000000000000000000000000dEaD';
-
+      const addr = inFarcaster ? await getAddress() : '0x000000000000000000000000000000000000dEaD';
       const res = await fetch(`${BACKEND_ORIGIN}/api/tap-sponsor`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -177,8 +175,7 @@ async function init() {
 
       const data = await res.json();
       if (data.txHash) {
-        document.getElementById('lastTx').textContent =
-          data.txHash.slice(0, 10) + '…';
+        document.getElementById('lastTx').textContent = data.txHash.slice(0, 10) + '…';
         log(`✅ Sponsored tx: ${data.txHash}`);
         await provider.waitForTransaction(data.txHash, 1);
         await refreshMyClicks(addr);
