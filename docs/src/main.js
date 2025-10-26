@@ -1,5 +1,5 @@
-// ✅ BaseTap Royale — Final Farcaster MiniApp Version
-// Includes: sdk.ready fix + wallet permission flow + log improvements
+// ✅ BaseTap Royale — Final Farcaster MiniApp Version (2025-10)
+// Includes: sdk.ready fix + wallet permission flow + connect button support
 
 import { RPC_URL, CONTRACT_ADDRESS, BACKEND_ORIGIN } from './config.js';
 import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk@0.2.0';
@@ -112,6 +112,17 @@ async function init() {
       box.innerHTML = "<div class='small'>Leaderboard unavailable</div>";
     }
   }
+
+  // 🔌 Connect Wallet button (manual trigger)
+  const connectBtn = document.getElementById('connectBtn');
+  connectBtn?.addEventListener('click', async () => {
+    log('🔗 Connect Wallet clicked');
+    const addr = await getAddress();
+    if (addr) {
+      alert(`Wallet connected: ${addr.slice(0, 6)}...${addr.slice(-4)}`);
+      await refreshMyClicks(addr);
+    }
+  });
 
   // 🔘 On-chain TAP
   const tapBtn = document.getElementById('tap');
