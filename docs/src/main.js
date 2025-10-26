@@ -3,20 +3,29 @@ import { RPC_URL, CONTRACT_ADDRESS, BACKEND_ORIGIN } from './config.js';
 import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk@0.2.0';
 import { ethers } from 'https://esm.sh/ethers@6.8.0';
 
+// --- FIX 1: Farcaster ortamı hazır olana kadar bekle ---
+async function waitForFarcasterReady() {
+  let retries = 0;
+  while ((!window.farcaster || !sdk?.actions) && retries < 20) {
+    await new Promise(r => setTimeout(r, 250));
+    retries++;
+  }
+  try {
+    await sdk.actions.ready();
+    console.log('✅ sdk.actions.ready() called after environment was ready');
+  } catch (e) {
+    console.warn('⚠ sdk.actions.ready() failed after retries:', e);
+  }
+}
+waitForFarcasterReady();
+
+// --- Detect environment ---
 const inFarcaster = typeof window !== 'undefined' && !!window.farcaster;
 console.log('Context:', inFarcaster ? 'Farcaster' : 'Browser');
 
 document.addEventListener('DOMContentLoaded', init);
 
 async function init(){
-  // ✅ Farcaster MiniApp SDK hazır sinyali
-  try {
-    await sdk.actions.ready();
-    console.log('✅ sdk.actions.ready() successfully called (inside init)');
-  } catch(e) {
-    console.warn('⚠ sdk.actions.ready() failed inside init:', e);
-  }
-
   const logEl = document.getElementById('log');
   const log = (m)=>{
     const t = new Date().toLocaleTimeString();
@@ -29,7 +38,6 @@ async function init(){
   const ABI = ['function tap() external', 'function getClicks(address) view returns (uint256)'];
   const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
 
-  // helper: contract code exists?
   async function checkContractCode(){
     try{
       const code = await provider.getCode(CONTRACT_ADDRESS);
@@ -45,10 +53,8 @@ async function init(){
     }
   }
 
-  // wallet permission & address (supports SDK and fallback)
   async function getAddress(){
     try{
-      // Farcaster wallet path: request permissions first
       if(sdk?.wallet?.getPermissions){
         const perms = await sdk.wallet.getPermissions?.();
         log(`🔐 current perms: ${JSON.stringify(perms)}`);
@@ -60,7 +66,6 @@ async function init(){
         if(w?.address){ log(`👛 SDK wallet address: ${w.address}`); return w.address; }
       }
 
-      // fallback: window.ethereum (metamask)
       if(typeof window !== 'undefined' && window.ethereum){
         log('🔁 Falling back to window.ethereum provider');
         const winProv = window.ethereum;
@@ -79,7 +84,6 @@ async function init(){
     }
   }
 
-  // refresh clicks with safety check
   async function refreshMyClicks(addr){
     if(!addr) return;
     if(!(await checkContractCode())) return;
@@ -89,29 +93,20 @@ async function init(){
       log(`↺ clicks: ${count.toString()}`);
     } catch(err){
       log(`❌ Read clicks error: ${err.message}`);
-      // debug: raw call
-      try{
-        const data = contract.interface.encodeFunctionData('getClicks', [addr]);
-        const raw = await provider.call({ to: CONTRACT_ADDRESS, data });
-        log(`🔬 raw call returned: ${raw}`);
-      } catch(e){ log(`🔎 raw call error: ${e.message}`); }
     }
   }
 
-  // Connect button
   document.getElementById('connectBtn')?.addEventListener('click', async ()=>{
     log('🔗 Connect Wallet clicked');
     const addr = await getAddress();
     if(addr){ alert(`Wallet connected: ${addr.slice(0,6)}...${addr.slice(-4)}`); await refreshMyClicks(addr); }
   });
 
-  // TAP (onchain)
   document.getElementById('tap')?.addEventListener('click', async ()=>{
     log('🖱️ TAP clicked');
     const addr = await getAddress();
     if(!addr) return;
 
-    // if in Farcaster and sdk.wallet.sendTransaction available, use it
     if(inFarcaster && sdk?.wallet?.sendTransaction){
       try{
         if(!(await checkContractCode())) return;
@@ -131,7 +126,6 @@ async function init(){
       return;
     }
 
-    // fallback: use window.ethereum signer (desktop browser)
     if(typeof window !== 'undefined' && window.ethereum){
       try{
         if(!(await checkContractCode())) return;
@@ -152,7 +146,6 @@ async function init(){
     alert('Onchain transactions require Warpcast/Farcaster wallet or MetaMask in browser.');
   });
 
-  // Gasless sponsor (keeps same as before)
   document.getElementById('tapFree')?.addEventListener('click', async ()=>{
     log('🖱️ Gasless TAP clicked');
     if(!BACKEND_ORIGIN){ alert('Backend not configured'); return; }
@@ -167,13 +160,11 @@ async function init(){
     } catch(err){ log(`❌ Gasless error: ${err.message}`); }
   });
 
-  // init
   await (async ()=>{
     log('✅ UI ready — SDK initialized.');
     await loadLeaderboard().catch(e=>log('leader load err:'+e.message));
   })();
 
-  // load leaderboard function (unchanged)
   async function loadLeaderboard(){
     const box = document.getElementById('leaderboard');
     if(!box) return;
