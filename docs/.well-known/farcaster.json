@@ -4,6 +4,7 @@
     "payload": "eyJkb21haW4iOiJiYXNlLXRhcC1yb3lhbGUudmVyY2VsLmFwcCJ9",
     "signature": "24w8HlOZqj/PVMot2QA3FcKFBrO3KqrFoqatCalmdBl3HM3ajYkYYPHaveswXEIa3a1vZy3M2t/0ehW2FVZo7xw="
   },
+
   "frame": {
     "version": "1",
     "name": "BaseTap Royale",
@@ -28,6 +29,15 @@
     "castShareUrl": "https://warpcast.com/~/compose?text=Play+BaseTap+Royale+on+Base+Network+⚡%0Ahttps%3A%2F%2Fbase-tap-royale.vercel.app",
     "webhookUrl": "https://api.basetaproyale.xyz/webhook"
   },
-  "sdkVersion": "latest",
-  "requestedPermissions": ["wallet"]
+
+  "miniapp": {
+    "version": "1.0.0",
+    "name": "BaseTap Royale",
+    "url": "https://base-tap-royale.vercel.app",
+    "description": "Tap-to-earn clicker game built on Base network.",
+    "iconUrl": "https://base-tap-royale.vercel.app/icon.png",
+    "scopes": ["wallet"],
+    "sdkVersion": "latest",
+    "requestedPermissions": ["wallet"]
+  }
 }
