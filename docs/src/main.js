@@ -1,9 +1,8 @@
-// docs/src/main.js
 import { RPC_URL, CONTRACT_ADDRESS, BACKEND_ORIGIN } from './config.js';
 import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk@0.2.0';
 import { ethers } from 'https://esm.sh/ethers@6.8.0';
 
-// --- FIX 1: Farcaster ortamı hazır olana kadar bekle ---
+// --- Farcaster SDK hazır olana kadar bekle ---
 async function waitForFarcasterReady() {
   let retries = 0;
   while ((!window.farcaster || !sdk?.actions) && retries < 20) {
@@ -19,7 +18,6 @@ async function waitForFarcasterReady() {
 }
 waitForFarcasterReady();
 
-// --- Detect environment ---
 const inFarcaster = typeof window !== 'undefined' && !!window.farcaster;
 console.log('Context:', inFarcaster ? 'Farcaster' : 'Browser');
 
@@ -53,8 +51,16 @@ async function init(){
     }
   }
 
+  // ✅ SDK wallet hazır bekleme eklendi
   async function getAddress(){
     try{
+      // wallet API hazır mı, değilse bekle
+      let retries = 0;
+      while ((!sdk.wallet || !sdk.wallet.getAddress) && retries < 15) {
+        await new Promise(r => setTimeout(r, 300));
+        retries++;
+      }
+
       if(sdk?.wallet?.getPermissions){
         const perms = await sdk.wallet.getPermissions?.();
         log(`🔐 current perms: ${JSON.stringify(perms)}`);
@@ -180,4 +186,8 @@ async function init(){
       box.innerHTML = "<div class='small'>Leaderboard unavailable</div>";
     }
   }
+
+  // ✅ Splash görseli absolute URL ile eklendi
+  const splash = document.getElementById('splash');
+  if (splash) splash.src = "https://base-tap-royale.vercel.app/assets/splash.png";
 }
