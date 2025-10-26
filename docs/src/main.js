@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log(m);
   };
 
-  // ✅ Farcaster hazır olana kadar bekle ve DOM yüklendikten sonra ready() çağır
+  // ✅ Splash kaldırma ve SDK hazır bekleme
   async function initFarcaster() {
     let tries = 0;
     while ((!window.farcaster || !sdk?.actions) && tries < 40) {
@@ -49,23 +49,36 @@ document.addEventListener('DOMContentLoaded', async () => {
     return true;
   }
 
-  // 🔐 getAddress – mobil & web Base ağı fixli
+  // 🔐 Wallet bağlantısı (mobil ve browser fixli)
   async function getAddress() {
     try {
-      // ✅ Farcaster içindeysek
+      // 1️⃣ Farcaster ortamında
       if (sdk?.wallet) {
         await sdk.actions.ready();
-        try { await sdk.wallet.switchChain?.(8453); } catch {}
+
+        // wallet injection bekle
+        let retries = 0;
+        while ((!sdk.wallet.getAddress || !sdk.wallet.requestPermissions) && retries < 20) {
+          await new Promise(r => setTimeout(r, 300));
+          retries++;
+        }
+
+        // izin iste
         const perms = await sdk.wallet.getPermissions?.();
         if (!perms?.includes('eth_accounts')) {
           await sdk.wallet.requestPermissions?.(['eth_accounts']);
         }
+
+        // adres al
         const w = await sdk.wallet.getAddress?.();
-        if (w?.address) return w.address;
+        if (w?.address) {
+          log(`👛 Farcaster wallet connected: ${w.address}`);
+          return w.address;
+        }
       }
 
-      // 🦊 Browser fallback
-      if (window.ethereum) {
+      // 2️⃣ MetaMask fallback
+      if (typeof window !== 'undefined' && window.ethereum) {
         const baseChainId = '0x2105';
         const chain = await window.ethereum.request({ method: 'eth_chainId' });
         if (chain !== baseChainId) {
@@ -90,12 +103,15 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
         }
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        if (accounts?.[0]) return accounts[0];
+        if (accounts?.[0]) {
+          log(`🦊 MetaMask wallet connected: ${accounts[0]}`);
+          return accounts[0];
+        }
       }
 
       throw new Error('No wallet available');
-    } catch (e) {
-      log(`⚠ getAddress error: ${e.message}`);
+    } catch (err) {
+      log(`⚠ getAddress error: ${err.message}`);
       alert('Please open in Warpcast and grant wallet permissions (or use MetaMask in browser).');
       return null;
     }
