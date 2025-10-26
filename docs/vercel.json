@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "name": "base-tap-royale",
+  "public": true,
+  "builds": [
+    { "src": "docs/**/*", "use": "@vercel/static" },
+    { "src": "api/**/*.js", "use": "@vercel/node" }
+  ],
+  "redirects": [
+    {
+       "source": "/.well-known/farcaster.json",
+      "destination": "https://api.farcaster.xyz/miniapps/hosted-manifest/019a221b-0349-f7ba-05a1-b1d1de686920",
+      "permanent": false
+    }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/$1.js" },
+    { "src": "/miniapp\\.json", "dest": "/docs/miniapp.json" },
+    { "src": "/(.*)", "dest": "/docs/$1" }
+  ]
+}
