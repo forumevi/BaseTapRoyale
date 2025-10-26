@@ -51,32 +51,37 @@ async function init(){
     }
   }
 
-  // ✅ SDK wallet hazır bekleme eklendi
+  // ✅ Warpcast cüzdan fix: Gecikmeli yükleme, retry & ready force
   async function getAddress(){
     try{
-      // wallet API hazır mı, değilse bekle
       let retries = 0;
-      while ((!sdk.wallet || !sdk.wallet.getAddress) && retries < 15) {
+      while ((!sdk.wallet || !sdk.wallet.getAddress) && retries < 25) {
         await new Promise(r => setTimeout(r, 300));
         retries++;
       }
 
-      if(sdk?.wallet?.getPermissions){
+      if (!sdk.wallet) {
+        console.warn('⚠ SDK wallet not yet available, forcing ready() again…');
+        try { await sdk.actions.ready(); } catch(e){}
+        await new Promise(r => setTimeout(r, 500));
+      }
+
+      if (sdk?.wallet?.getPermissions) {
         const perms = await sdk.wallet.getPermissions?.();
         log(`🔐 current perms: ${JSON.stringify(perms)}`);
-        if(!perms || !perms.includes('eth_accounts')){
+        if (!perms || !perms.includes('eth_accounts')) {
           log('Requesting wallet permissions via SDK…');
           await sdk.wallet.requestPermissions?.(['eth_accounts']);
         }
         const w = await sdk.wallet.getAddress?.();
-        if(w?.address){ log(`👛 SDK wallet address: ${w.address}`); return w.address; }
+        if (w?.address) { log(`👛 SDK wallet address: ${w.address}`); return w.address; }
       }
 
-      if(typeof window !== 'undefined' && window.ethereum){
+      if (typeof window !== 'undefined' && window.ethereum) {
         log('🔁 Falling back to window.ethereum provider');
         const winProv = window.ethereum;
         const accounts = await winProv.request({ method: 'eth_requestAccounts' });
-        if(accounts && accounts.length) {
+        if (accounts?.length) {
           log(`👛 Connected via provider: ${accounts[0]}`);
           return accounts[0];
         }
