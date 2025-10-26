@@ -17,14 +17,9 @@
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/$1.js" },
     { "src": "/miniapp\\.json", "dest": "/docs/miniapp.json" },
-
-    // ✅ Ana sayfa isteğini doğru yönlendir
     { "src": "/$", "dest": "/docs/index.html" },
-
-    // ✅ Docs altındaki tüm dosyaları kapsa
     { "src": "/(.*)", "dest": "/docs/$1" }
   ],
   "cleanUrls": true,
   "trailingSlash": false
 }
-
