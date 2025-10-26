@@ -12,6 +12,11 @@ async function waitForFarcasterReady() {
   try {
     await sdk.actions.ready();
     console.log('✅ sdk.actions.ready() called after environment was ready');
+    // ✅ Başlangıçta Base ağına geçiş yap
+    if (sdk?.wallet?.switchChain) {
+      await sdk.wallet.switchChain(8453);
+      console.log('🔄 Switched to Base Mainnet');
+    }
   } catch (e) {
     console.warn('⚠ sdk.actions.ready() failed after retries:', e);
   }
@@ -54,52 +59,52 @@ async function init() {
     }
   }
 
-  // ✅ Yeni versiyon: Warpcast wallet bağlantı düzeltmesi
+  // ✅ Fortune-Teller tarzı getAddress + Base chain fix
   async function getAddress() {
     try {
-      // SDK ve wallet yüklenene kadar bekle
-      let tries = 0;
-      while ((!sdk?.actions || !sdk?.wallet) && tries < 40) {
-        await new Promise(r => setTimeout(r, 400));
-        tries++;
+      // SDK hazır olana kadar bekle
+      for (let i = 0; i < 50; i++) {
+        if (sdk?.actions?.ready) {
+          try { await sdk.actions.ready(); } catch {}
+        }
+        if (sdk?.wallet?.getAddress) break;
+        await new Promise(r => setTimeout(r, 300));
       }
 
-      // ready ve init fallback
-      if (sdk?.actions?.ready) {
-        try { await sdk.actions.ready(); } catch (e) {}
-      }
-      if (!sdk?.wallet && sdk?.init) {
-        try { await sdk.init(); } catch (e) {}
+      // Wallet init fallback
+      if (sdk?.wallet?.init) {
+        try { await sdk.wallet.init(); } catch {}
       }
 
-      // wallet metodlarını bekle
-      tries = 0;
-      while ((!sdk.wallet?.getAddress || !sdk.wallet?.requestPermissions) && tries < 40) {
-        await new Promise(r => setTimeout(r, 400));
-        tries++;
+      // ✅ Base chain zorlaması
+      if (sdk?.wallet?.switchChain) {
+        try {
+          await sdk.wallet.switchChain(8453); // Base Mainnet
+          log("🔄 Switched to Base Mainnet");
+        } catch (err) {
+          log("⚠ Base chain switch failed: " + err.message);
+        }
       }
 
-      // Farcaster wallet var mı?
+      // Cüzdan izinleri
       if (sdk?.wallet?.getPermissions) {
-        const perms = await sdk.wallet.getPermissions?.();
+        let perms = await sdk.wallet.getPermissions?.();
         if (!perms || !perms.includes('eth_accounts')) {
+          log('🔑 Requesting Farcaster wallet permissions…');
           await sdk.wallet.requestPermissions?.(['eth_accounts']);
         }
         const w = await sdk.wallet.getAddress?.();
         if (w?.address) {
-          log(`👛 SDK wallet: ${w.address}`);
+          log(`✅ Farcaster wallet address: ${w.address}`);
           return w.address;
         }
       }
 
-      // Fallback: MetaMask
+      // Browser fallback (MetaMask)
       if (typeof window !== 'undefined' && window.ethereum) {
-        log('🔁 Falling back to MetaMask');
+        log('🦊 Fallback to MetaMask');
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        if (accounts?.length) {
-          log(`👛 MetaMask wallet: ${accounts[0]}`);
-          return accounts[0];
-        }
+        if (accounts?.length) return accounts[0];
       }
 
       throw new Error('No wallet available');
@@ -143,7 +148,7 @@ async function init() {
           to: CONTRACT_ADDRESS,
           data: contract.interface.encodeFunctionData('tap', []),
           value: '0x0',
-          chainId: 8453,
+          chainId: 8453 // ✅ BASE MAINNET FIX
         });
         document.getElementById('lastTx').textContent = tx.hash.slice(0, 10) + '…';
         log(`🚀 SDK tx sent: ${tx.hash}`);
@@ -160,6 +165,11 @@ async function init() {
         if (!(await checkContractCode())) return;
         const ep = new ethers.BrowserProvider(window.ethereum);
         const signer = await ep.getSigner();
+        const network = await ep.getNetwork();
+        if (network.chainId !== 8453) {
+          alert('Please switch MetaMask to Base Mainnet before proceeding.');
+          return;
+        }
         const contractWithSigner = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
         const txResp = await contractWithSigner.tap();
         log(`🚀 Fallback tx sent (provider): ${txResp.hash || txResp}`);
