@@ -59,52 +59,67 @@ async function init() {
     }
   }
 
-  // ✅ Fortune-Teller tarzı getAddress + Base chain fix
+  // ✅ Farcaster + Browser Base Network fixli getAddress()
   async function getAddress() {
     try {
-      // SDK hazır olana kadar bekle
-      for (let i = 0; i < 50; i++) {
-        if (sdk?.actions?.ready) {
-          try { await sdk.actions.ready(); } catch {}
+      // Farcaster ortamı (Warpcast SDK)
+      if (sdk?.wallet) {
+        for (let i = 0; i < 40; i++) {
+          if (sdk?.actions?.ready) {
+            try { await sdk.actions.ready(); break; } catch {}
+          }
+          await new Promise(r => setTimeout(r, 300));
         }
-        if (sdk?.wallet?.getAddress) break;
-        await new Promise(r => setTimeout(r, 300));
-      }
 
-      // Wallet init fallback
-      if (sdk?.wallet?.init) {
-        try { await sdk.wallet.init(); } catch {}
-      }
-
-      // ✅ Base chain zorlaması
-      if (sdk?.wallet?.switchChain) {
-        try {
-          await sdk.wallet.switchChain(8453); // Base Mainnet
-          log("🔄 Switched to Base Mainnet");
-        } catch (err) {
-          log("⚠ Base chain switch failed: " + err.message);
+        if (sdk?.wallet?.switchChain) {
+          try { await sdk.wallet.switchChain(8453); } catch {}
         }
-      }
 
-      // Cüzdan izinleri
-      if (sdk?.wallet?.getPermissions) {
-        let perms = await sdk.wallet.getPermissions?.();
+        const perms = await sdk.wallet.getPermissions?.();
         if (!perms || !perms.includes('eth_accounts')) {
-          log('🔑 Requesting Farcaster wallet permissions…');
           await sdk.wallet.requestPermissions?.(['eth_accounts']);
         }
         const w = await sdk.wallet.getAddress?.();
-        if (w?.address) {
-          log(`✅ Farcaster wallet address: ${w.address}`);
-          return w.address;
-        }
+        if (w?.address) return w.address;
       }
 
-      // Browser fallback (MetaMask)
+      // 🦊 Browser fallback (MetaMask)
       if (typeof window !== 'undefined' && window.ethereum) {
-        log('🦊 Fallback to MetaMask');
+        log('🦊 MetaMask fallback active');
+
+        // ✅ Ağa otomatik geçiş (Base Mainnet)
+        const baseChainId = '0x2105'; // 8453 decimal
+        const chain = await window.ethereum.request({ method: 'eth_chainId' });
+        if (chain !== baseChainId) {
+          try {
+            await window.ethereum.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId: baseChainId }]
+            });
+            log('🔄 Switched MetaMask to Base Mainnet');
+          } catch (switchError) {
+            if (switchError.code === 4902) {
+              await window.ethereum.request({
+                method: 'wallet_addEthereumChain',
+                params: [{
+                  chainId: baseChainId,
+                  chainName: 'Base Mainnet',
+                  nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
+                  rpcUrls: ['https://mainnet.base.org'],
+                  blockExplorerUrls: ['https://basescan.org']
+                }]
+              });
+              log('✅ Added Base Mainnet to MetaMask');
+            }
+          }
+        }
+
+        // 🔐 Hesap iste
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        if (accounts?.length) return accounts[0];
+        if (accounts?.length) {
+          log(`✅ MetaMask wallet connected: ${accounts[0]}`);
+          return accounts[0];
+        }
       }
 
       throw new Error('No wallet available');
