@@ -1,96 +1,68 @@
-// src/main.js
+// ✅ BaseTap Royale — Farcaster MiniApp (fixed ready issue)
+// Fortune MiniApp pattern applied
+
 import { RPC_URL, CONTRACT_ADDRESS, BACKEND_ORIGIN } from './config.js';
+import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk@0.2.0';
+import { ethers } from 'https://esm.sh/ethers@6.8.0';
 
-// 🔒 SDK sürümünü sabitle
-const sdkUrl = 'https://esm.sh/@farcaster/miniapp-sdk@0.0.17';
-const ethersUrl = 'https://esm.sh/ethers@6';
+// 🔹 Call ready() immediately (fix splash issue)
+try {
+  sdk.actions.ready();
+  console.log('✅ SDK ready() called immediately');
+} catch (e) {
+  console.warn('⚠️ sdk.actions.ready() failed early:', e);
+}
 
-// DOM hazır olunca başla (event listener'ların kesin bağlanması için)
+// 🔹 Detect environment
+const inFarcaster = typeof window !== 'undefined' && !!window.farcaster;
+console.log(inFarcaster ? '📱 Farcaster Mini App context' : '🌐 Browser / Preview context');
+
 document.addEventListener('DOMContentLoaded', init);
 
 async function init() {
   const logEl = document.getElementById('log');
   const log = (m) => {
-    if (!logEl) return;
-    logEl.textContent = `[${new Date().toLocaleTimeString()}] ${m}\n` + logEl.textContent;
+    if (logEl) logEl.textContent = `[${new Date().toLocaleTimeString()}] ${m}\n` + logEl.textContent;
+    console.log(m);
   };
 
-  // SDK + ethers yükle
-  let sdk, ethers;
-  try {
-    const [{ sdk: _sdk }, _ethers] = await Promise.all([import(sdkUrl), import(ethersUrl)]);
-    sdk = _sdk;
-    ethers = _ethers;
-  } catch (e) {
-    log(`❌ SDK import error: ${e?.message || e}`);
-    return;
-  }
-
-  // Ortam bilgisi
-  const inFarcaster = typeof window !== 'undefined' && !!window.farcaster;
-  log(inFarcaster ? '📱 Farcaster environment detected' : '🌐 No Farcaster context (browser/preview)');
-
-  // SDK ready
-  try {
-    await sdk.actions.ready();
-    log('✅ Farcaster SDK ready');
-  } catch {
-    log('⚠️ SDK ready failed (non-Farcaster env)');
-  }
-
-  // Provider & contract
   const provider = new ethers.JsonRpcProvider(RPC_URL);
   const ABI = [
     'function tap() external',
-    'function tapFor(address user) external',
-    'function getClicks(address user) view returns (uint256)',
-    'event Clicked(address indexed user, uint256 total)'
+    'function getClicks(address user) view returns (uint256)'
   ];
   const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
 
-  // Helpers
-  async function requestAddressWithPrompt() {
-    // 1) hızlı dene
+  // 🧠 Helper: get Farcaster wallet address
+  async function getAddress() {
     try {
       const w = await sdk.wallet.getAddress();
-      if (w?.address) {
-        log(`✅ Connected as ${w.address}`);
-        return w.address;
-      }
+      if (w?.address) return w.address;
     } catch {}
-    // 2) izin iste (SDK sürümüne göre değişebilir)
     try {
       if (sdk.wallet.requestPermissions) await sdk.wallet.requestPermissions();
-      else if (sdk.wallet.connect) await sdk.wallet.connect();
-      else if (sdk.wallet.requestAddress) await sdk.wallet.requestAddress();
-    } catch (e) {
-      log(`⚠️ Permission request failed: ${e?.message || e}`);
-    }
-    // 3) tekrar dene
-    try {
       const w2 = await sdk.wallet.getAddress();
-      if (w2?.address) {
-        log(`✅ Connected as ${w2.address}`);
-        return w2.address;
-      }
-    } catch {}
-    // 4) olmadıysa net uyarı
-    log('⚠️ Please open this app inside Warpcast → Open as Mini App (wallet required).');
-    alert('Please open this app inside Warpcast → Open as Mini App (wallet required).');
+      if (w2?.address) return w2.address;
+    } catch (e) {
+      log(`⚠️ getAddress error: ${e?.message}`);
+    }
+    log('⚠️ Wallet unavailable — open inside Warpcast.');
+    alert('Please open this Mini App inside Warpcast to use your wallet.');
     return null;
   }
 
+  // 🧠 Helper: refresh user taps
   async function refreshMyClicks(addr) {
     if (!addr) return;
     try {
       const v = await contract.getClicks(addr);
-      const el = document.getElementById('myClicks');
-      if (el) el.textContent = v.toString();
+      document.getElementById('myClicks').textContent = v.toString();
     } catch (e) {
-      log(`⚠️ Read clicks error: ${e?.message || e}`);
+      log(`Read clicks error: ${e.message}`);
     }
   }
 
+  // 🧠 Helper: fetch leaderboard
   async function loadLeaderboard() {
     const box = document.getElementById('leaderboard');
     if (!box) return;
@@ -100,85 +72,74 @@ async function init() {
     }
     try {
       const r = await fetch(`${BACKEND_ORIGIN}/api/leaderboard`, { cache: 'no-store' });
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      if (!r.ok) throw new Error(r.status);
       const data = await r.json();
       const rows = (data.top || [])
-        .map((x, i) => `<tr><td>${i + 1}</td><td class="mono">${x.user.slice(0, 6)}…${x.user.slice(-4)}</td><td>${x.total}</td></tr>`)
+        .map((x, i) => `<tr><td>${i + 1}</td><td>${x.user.slice(0, 6)}…${x.user.slice(-4)}</td><td>${x.total}</td></tr>`)
         .join('');
       box.innerHTML = `<table><thead><tr><th>#</th><th>User</th><th>Taps</th></tr></thead><tbody>${rows}</tbody></table>`;
     } catch (e) {
       box.innerHTML = "<div class='small'>Leaderboard unavailable</div>";
-      log(`⚠️ Leaderboard error: ${e?.message || e}`);
+      log(`Leaderboard fetch error: ${e.message}`);
     }
   }
 
-  // Button: TAP (on-chain tx)
+  // 🔘 TAP button (on-chain)
   const tapBtn = document.getElementById('tap');
-  if (tapBtn) {
-    tapBtn.addEventListener('click', async () => {
-      log('🖱️ TAP clicked');
-      if (!inFarcaster) {
-        log('⚠️ Not a Mini App context (this is Preview Tool / browser). Use Warpcast → Open as Mini App.');
-        alert('Open in Warpcast → Open as Mini App to sign transactions.');
-        return;
-      }
-      const addr = await requestAddressWithPrompt();
-      if (!addr) return;
-      try {
-        const tx = await sdk.wallet.sendTransaction({
-          to: CONTRACT_ADDRESS,
-          data: contract.interface.encodeFunctionData('tap', []),
-          value: '0x0',
-          chainId: 8453 // Base mainnet
-        });
-        const lastTx = document.getElementById('lastTx');
-        if (lastTx) lastTx.textContent = tx.hash.slice(0, 10) + '…';
-        log(`🚀 Sent tx: ${tx.hash}`);
-        await provider.waitForTransaction(tx.hash, 1);
-        await refreshMyClicks(addr);
-      } catch (e) {
-        log(`❌ Tx error: ${e?.message || e}`);
-      }
-    });
-  }
+  tapBtn?.addEventListener('click', async () => {
+    log('🖱️ TAP clicked');
+    if (!inFarcaster) {
+      alert('Open this app inside Warpcast → Open as Mini App to send transactions.');
+      return;
+    }
+    const addr = await getAddress();
+    if (!addr) return;
+    try {
+      const tx = await sdk.wallet.sendTransaction({
+        to: CONTRACT_ADDRESS,
+        data: contract.interface.encodeFunctionData('tap', []),
+        value: '0x0',
+        chainId: 8453
+      });
+      document.getElementById('lastTx').textContent = tx.hash.slice(0, 10) + '…';
+      log(`🚀 Sent tx: ${tx.hash}`);
+      await provider.waitForTransaction(tx.hash, 1);
+      await refreshMyClicks(addr);
+    } catch (e) {
+      log(`❌ Tx error: ${e.message}`);
+    }
+  });
 
-  // Button: Gasless TAP (backend sponsor)
+  // 🔘 Gasless TAP button (backend sponsor)
   const tapFreeBtn = document.getElementById('tapFree');
-  if (tapFreeBtn) {
-    tapFreeBtn.addEventListener('click', async () => {
-      log('🖱️ Gasless TAP clicked');
-      if (!BACKEND_ORIGIN) {
-        alert('Sponsor backend not configured');
-        log('⚠️ Sponsor backend not configured');
-        return;
+  tapFreeBtn?.addEventListener('click', async () => {
+    log('🖱️ Gasless TAP clicked');
+    if (!BACKEND_ORIGIN) {
+      alert('Backend not configured for gasless mode.');
+      return;
+    }
+    try {
+      const addr = inFarcaster ? await getAddress() : '0x000000000000000000000000000000000000dEaD';
+      const res = await fetch(`${BACKEND_ORIGIN}/api/tap-sponsor`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user: addr })
+      });
+      const data = await res.json();
+      if (data.txHash) {
+        document.getElementById('lastTx').textContent = data.txHash.slice(0, 10) + '…';
+        log(`✅ Sponsored tx: ${data.txHash}`);
+        await provider.waitForTransaction(data.txHash, 1);
+        await refreshMyClicks(addr);
+      } else {
+        log(`⚠️ Sponsor failed: ${JSON.stringify(data)}`);
       }
-      // Farcaster şart değil; mock backend ise txHash döner
-      try {
-        const addr =
-          inFarcaster ? (await requestAddressWithPrompt()) : '0x000000000000000000000000000000000000dEaD';
-        const r = await fetch(`${BACKEND_ORIGIN}/api/tap-sponsor`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user: addr })
-        });
-        const data = await r.json();
-        if (data.txHash) {
-          const lastTx = document.getElementById('lastTx');
-          if (lastTx) lastTx.textContent = data.txHash.slice(0, 10) + '…';
-          log(`✅ Sponsored tx: ${data.txHash}`);
-          try { await provider.waitForTransaction(data.txHash, 1); } catch {}
-          if (inFarcaster && addr) await refreshMyClicks(addr);
-        } else {
-          log(`⚠️ Sponsor failed: ${JSON.stringify(data)}`);
-        }
-      } catch (e) {
-        log(`❌ Sponsor err: ${e?.message || e}`);
-      }
-    });
-  }
+    } catch (e) {
+      log(`❌ Gasless error: ${e.message}`);
+    }
+  });
 
-  // İlk yükleme
+  // Load leaderboard
   await loadLeaderboard();
-  // Preview Tool’da sessiz kalmasın diye butonların bağlı olduğunu logla
-  log('🧩 UI ready (buttons wired).');
+  log('🧩 UI ready — SDK initialized.');
 }
